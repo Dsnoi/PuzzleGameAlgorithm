@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 
-namespace Test
+namespace PuzzleGameAlgorithm
 {
-    class Test
+    class PuzzleGameAlgorithm
     {
         public enum CellStatus
         {
             SCANNED, UNSCANNED
         }
+
+        //ブロッククラス
         public class Cell
         {
             private readonly int posX, posY;
@@ -33,22 +35,28 @@ namespace Test
             }
         }
 
+        //盤クラス
         public class Puzzle
         {
             private Cell[][] puz;
+            // posXMax : 盤の列数（幅） - 1
+            // posYMax : 盤の行数（高さ） - 1
             private readonly int posXMax, posYMax;
-            private Dictionary<Cell, int> dictionary;
-            private const int LIMIT = 4;
+            // 有効ブロックを格納する配列
+            private List<Cell> matchList;
+            // 縦か横にNつ以上つなげると消える
+            private const int LIMIT = 3;
 
             public Puzzle(string[] puzzle)
             {
                 puz = CreateCells(puzzle);
                 posXMax = puz[1].Length - 1;
                 posYMax = puz.Length - 1;
-                dictionary = new Dictionary<Cell, int>();
-                
+                matchList = new List<Cell>();
+
             }
 
+            // マッチ情報を出力
             public void OutputResultStrings()
             {
                 List<Cell> list = GetResult();
@@ -71,6 +79,7 @@ namespace Test
                 }
             }
 
+            // 全てのマッチをチェック
             private List<Cell> GetResult()
             {
                 List<Cell> cellList = new List<Cell>();
@@ -80,16 +89,17 @@ namespace Test
                     {
                         ScanPos(cell);
 
-                        if (dictionary.Count >= LIMIT)
+                        if (matchList.Count >= LIMIT)
                         {
-                            cellList.AddRange(dictionary.Keys);
+                            cellList.AddRange(matchList);
                         }
-                        dictionary.Clear();
+                        matchList.Clear();
                     }
                 }
                 return cellList;
             }
 
+            // ブロックを生成
             private Cell[][] CreateCells(string[] puzzle)
             {
                 Cell[][] cells = new Cell[puzzle.Length][];
@@ -105,23 +115,25 @@ namespace Test
                 return cells;
             }
 
+            // 指定連結方向のチェック
             private void Calculate(Cell nextCell, Cell curCell)
             {
                 if (nextCell != null && nextCell.Status == CellStatus.UNSCANNED)
                 {
-                    if(nextCell.Color == curCell.Color)
+                    if (nextCell.Color == curCell.Color)
                     {
                         nextCell.Scanned();
                         curCell.Scanned();
 
                         ScanPos(nextCell);
 
-                        dictionary.TryAdd(curCell, 0);
-                        dictionary.TryAdd(nextCell, 0);
+                        matchList.Add(curCell);
+                        matchList.Add(nextCell);
                     }
                 }
             }
-            
+
+            // 指定位置がN連マッチしているか検出
             private void ScanPos(Cell cell)
             {
                 //上
